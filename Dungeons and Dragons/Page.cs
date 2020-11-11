@@ -7,78 +7,46 @@ using System.Text;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.PageObjects;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
+using System.IO;
 
 namespace Dungeons_and_Dragons
 {
-    class Page
-    {
-		IWebDriver driver = new ChromeDriver();
-
-		/// <summary>
-		/// Получение списка элементов из карточек
-		/// </summary>
-		/// <returns>IList cards</returns>
-		IList<IWebElement> GetCards()
+	class Page
+	{
+		public void Delete_File()
 		{
-			driver.Url = "https://dungeon.su/articles/inventory/";
-			IWebElement center_page = driver.FindElement(By.ClassName("center"));
-			IList<IWebElement> cards = driver.FindElements(By.ClassName("paper-1"));
-			return cards;
-		}
-		/// <summary>
-		/// Нажатие на кнопку "Читать далее"
-		/// </summary>
-		/// <param name="cards"></param>
-		/// <param name="number"></param>
-		void Press_button(IList<IWebElement> cards, int number)
-		{
-			cards[number].FindElement(By.ClassName("read-more")).Click();
-		}
-		/// <summary>
-		/// Получение таблицы "Безделушки"
-		/// </summary>
-		/// <returns>Dictionary dict</returns>
-		Dictionary<string, string> bezdelushki()
-		{
-			Press_button(GetCards(), 0);
-			IWebElement center_page1 = driver.FindElement(By.ClassName("center"));
-			IList<IWebElement> tr = center_page1.FindElements(By.TagName("tr"));
-			Dictionary<string, string> dict = new Dictionary<string, string>();
-			foreach (var item in tr)
+			string path = "C:\\json\\DataTent.json";
+			FileInfo fileInf = new FileInfo(path);
+			if (fileInf.Exists)
 			{
-				List<string> list_bez = new List<string>();
-				IList<IWebElement> web = item.FindElements(By.TagName("td"));
-				foreach (var j in web)
-				{
-					list_bez.Add(j.Text);
-				}
-				dict.Add(list_bez[0], list_bez[1]);
+				fileInf.Delete();
 			}
-			driver.Navigate().Back();
-			return dict;
 		}
-
-		public void ArmorAndShields()
+		public void JsWrite(object arg)
 		{
-			Press_button(GetCards(), 1);
-			IWebElement center_page1 = driver.FindElement(By.ClassName("card-wrapper"));
-			IList<IWebElement> webElements = center_page1.FindElements(By.TagName("table"));
-			IList<IWebElement> tables = webElements[0].FindElements(By.ClassName("table_header"));
-
-			DataSet armor = new DataSet("Armor and shields");
-			DataTable armorandshields = new DataTable("armorandshields");
-			// добавляем таблицу в dataset
-			armor.Tables.Add(armorandshields);
-			foreach (var item in tables)
+			JsonSerializerOptions options = new JsonSerializerOptions
 			{
-				armorandshields.Columns.Add(item.Text);
-			}
+				Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+				WriteIndented = true
+			};
+			var json = JsonSerializer.Serialize(arg, options);
+
+			string path = "C:\\json\\DataTent.json";
+			StreamWriter sw = new StreamWriter(File.Open(path, FileMode.Append));
+			sw.WriteLine(json);
+			sw.Close();
 		}
 		static void Main(string[] args)
 		{
 			Page page = new Page();
-			page.ArmorAndShields();
+			page.Delete_File();
+			Tentaculus tentaculus = new Tentaculus();
+			tentaculus.Get_Info();
+			tentaculus.Quit();
+
 		}
 	}
 }
